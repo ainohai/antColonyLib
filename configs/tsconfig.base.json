@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "checkJs": true,
+    "allowJs": true,
+    "declaration": true,
+    "declarationMap": true,
+    "allowSyntheticDefaultImports": true
+
+  },
+
+  "files": ["../src/index.ts"]
+
+}
+/*{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "noImplicitAny": false,
+    "noImplicitThis": true,
+    "module": "esnext",
+    "target": "es2018",
+    "allowJs": true,
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "isolatedModules": true,
+    "exactOptionalPropertyTypes":false,
+    "jsx": "react",
+    "jsxFactory": "h",
+    "jsxFragmentFactory": "Fragment",
+    "lib": ["es2017", "dom"]
+  }
+}*/

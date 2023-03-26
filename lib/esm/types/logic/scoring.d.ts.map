@@ -1,0 +1,1 @@
+{"version":3,"file":"scoring.d.ts","sourceRoot":"","sources":["../../../../src/logic/scoring.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,UAAU,IAAI,UAAU,EAAE,QAAQ,IAAI,QAAQ,EAAE,MAAM,iBAAiB,CAAC;AACjF,OAAO,EAAE,SAAS,EAAE,MAAM,cAAc,CAAC;AAEzC,OAAO,EAAE,QAAQ,EAAQ,MAAM,mBAAmB,CAAC;AAGnD,eAAO,MAAM,oBAAoB,cAAe,SAAS,sCAAsC,QAAQ,SAAS,QAAQ,eAAc,MAAM,KAAG,MAwB9I,CAAA"}
