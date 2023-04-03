@@ -1,17 +1,5 @@
-import { Direction } from "../logic/directions";
 import { AntWorld, Cell } from "./World";
-export declare type Coordinate = [
-    x: number,
-    y: number
-];
-export declare type DirectionScore = {
-    direction: Direction;
-    score: number;
-};
-export declare enum AntState {
-    SEARCH_FOOD = 0,
-    CARRY_FOOD = 1
-}
+import { AntState, Coordinate, Direction } from "../types";
 export declare class Ant {
     location: Coordinate;
     age: number;

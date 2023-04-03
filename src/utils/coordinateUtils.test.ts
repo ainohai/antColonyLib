@@ -2,7 +2,7 @@ import { getCoordinateWithIndex, getIndexWithCoordinate, getValueWithCoordinate 
 
 const totalColumns = 3;
 const totalRows = 3;
-const singleDimArr = [];
+const singleDimArr: number[] = [];
 
 
 describe('coordinateUtils => ', () => {

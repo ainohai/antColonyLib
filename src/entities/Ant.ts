@@ -1,8 +1,9 @@
-import { directions, Direction, directionsForward, directionsLeft, directionsRight } from "../logic/directions";
+import { directionsForward, directionsLeft, directionsRight } from "../logic/directions";
 import { getScoreForDirection } from "../logic/scoring";
-import { antConfig, CellStates, staticParameters } from "../antConfig";
+import { antConfig, staticParameters } from "../config/antConfig";
 import { getIndexWithCoordinate } from "../utils/coordinateUtil";
 import { AntWorld, Cell } from "./World";
+import { AntState, CellStates, Coordinate, Direction, directions, DirectionScore } from "../types";
 
 
 /*
@@ -69,18 +70,6 @@ Object fetch took 29178.099999904633 milliseconds.
  */
 
 
-export type Coordinate = [
-    x: number, 
-    y: number
-]
-
-export type DirectionScore = {direction: Direction, score: number}
-
-export enum AntState {
-    SEARCH_FOOD,
-    CARRY_FOOD
-}
-
 export class Ant {
     location: Coordinate;
     age: number = 0;
@@ -102,7 +91,7 @@ export class Ant {
     }
 
     get isDead() {
-        return this.age > antConfig.antLifespan;
+        return this.age > antConfig().antLifespan;
     }
 
     respawnAtCell(homeCoord: Coordinate) {
@@ -116,7 +105,7 @@ export class Ant {
     }
 
     shouldRespawn() {
-        return (Math.random() * 100) < staticParameters.RESPAWN_PERCENTAGE;
+        return (Math.random() * 100) < staticParameters().RESPAWN_PERCENTAGE;
     }
 
     randomizeDirection() {
@@ -146,10 +135,10 @@ export class Ant {
         //if there is an optimal direction,
         //just to give them a little more interesting behavior.
         const random = Math.random();
-        if (random <= antConfig.moveForwardPercentage && forward.score >= 0) {
+        if (random <= antConfig().moveForwardPercentage && forward.score >= 0) {
             chosen = forward;
         }
-        else if (random > antConfig.moveForwardPercentage && random < (antConfig.moveRandomPercentage + antConfig.moveForwardPercentage)) {
+        else if (random > antConfig().moveForwardPercentage && random < (antConfig().moveRandomPercentage + antConfig().moveForwardPercentage)) {
             const positiveScores = scores.filter(s => s.score > 0);
             chosen = positiveScores.length > 0 ? positiveScores[Math.floor(Math.random() * positiveScores.length)] : undefined;
         }
@@ -167,7 +156,7 @@ export class Ant {
 
         if (!newLocation) {
             throw new Error(`No cell found for ant in (${this.location[0]}, ${this.location[1]}) 
-            with index ${getIndexWithCoordinate(staticParameters.COLUMNS, staticParameters.ROWS, this.location[0], this.location[1])}`);
+            with index ${getIndexWithCoordinate(staticParameters().COLUMNS, staticParameters().ROWS, this.location[0], this.location[1])}`);
         }
 
         this.stepsFromHome += 1;
@@ -199,7 +188,7 @@ export class Ant {
         newLocation.addPheremone(this.stepsFromHome, this.stepsFromFood, currentTick);
         }
         else {
-            this.age = antConfig.antLifespan + 1;
+            this.age = antConfig().antLifespan + 1;
         }
 
         this.age++;

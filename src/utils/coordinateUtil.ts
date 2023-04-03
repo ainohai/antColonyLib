@@ -1,4 +1,4 @@
-import { Coordinate } from "../entities/Ant";
+import { Coordinate } from "../types";
 
 const isOnWorld = (val: number, max: number) => (val < max && val >= 0);
 

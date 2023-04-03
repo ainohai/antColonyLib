@@ -1,12 +1,13 @@
 import { Ant } from '../entities/Ant';
 import { AntWorld } from '../entities/World';
+import { ParametersType } from '../types';
 export declare class Simulation {
     tick: number;
     state: {
         ants: Ant[];
         world: AntWorld;
     };
-    constructor(columns: number, rows: number);
+    constructor(params: Partial<ParametersType>);
     run(): {
         ants: Ant[];
         world: AntWorld;

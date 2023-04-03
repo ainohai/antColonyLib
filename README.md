@@ -1,4 +1,7 @@
-# Little demos
+# Ant colony
 
-Small generative art algorithm practices. 
+Tool for generative art projects. 
+
+Library tut followed from here:
+https://snyk.io/blog/best-practices-create-modern-npm-package/
 

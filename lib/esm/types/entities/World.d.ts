@@ -1,6 +1,4 @@
-import { CellStates } from "../antConfig";
-import { Coordinate } from './Ant';
-import { Direction } from '../logic/directions';
+import { CellStates, Coordinate, Direction } from '../types';
 export declare class Cell {
     type: CellStates;
     foodPheremone: number;

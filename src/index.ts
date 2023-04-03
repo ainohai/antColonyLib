@@ -1,33 +1,35 @@
-import { antConfig, configType, setAntConfig, staticParameters } from "./antConfig";
-import { Ant, AntState } from "./entities/Ant";
+import { antConfig, staticParameters } from "./config/antConfig";
+import { Ant } from "./entities/Ant";
 import { AntWorld } from "./entities/World";
 import { Simulation } from "./logic/Simulation";
+import { AntState, configType, ParametersType } from "./types";
 
 
 export type { Ant };
 export type { AntWorld };
 export type { Simulation };
 export { AntState };
+export type {ParametersType};
 
-export function setConfig(config: configType) {
-    setAntConfig(config);
+export function getStaticParams(): Readonly<ParametersType> {
+    return {...staticParameters()};
 }
 
-//Todo: User should not be able to modify the config from here!
-export function getConfig() {
-    return antConfig;
+export function setVariableParameters(config: configType) {
+    setVariableParameters(config);
 }
 
-export function getStaticParams() {
-    return staticParameters;
+/** User should not be able to modify  */
+export function getConfig(): Readonly<configType> {
+    return {...antConfig()};
 }
   
-export function createSimulation(width: number, height: number): Simulation{
-    return new Simulation(width, height);
+export function createSimulation(params: Partial<ParametersType>): Simulation{
+    return new Simulation(params);
 }
   
 export default {
-    setConfig,
+    setVariableParameters,
     getConfig,
     getStaticParams,
     createSimulation,

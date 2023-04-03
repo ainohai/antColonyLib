@@ -1,6 +1,7 @@
 import { Ant } from '../entities/Ant';
 import { AntWorld } from '../entities/World';
-import { staticParameters } from "../antConfig";
+import { setStaticParameters } from "../config/antConfig";
+import { ParametersType } from '../types';
 
 
 export class Simulation {
@@ -9,16 +10,18 @@ export class Simulation {
     ants: Ant[],
     world: AntWorld};
 
-    constructor(columns: number, rows: number) {
+    constructor(params: Partial<ParametersType>) {
         this.tick = 0;
+
+        const config = setStaticParameters(params)
         this.state = {
             ants: [],
-            world: new AntWorld(columns, rows)
+            world: new AntWorld(config.COLUMNS, config.ROWS)
         };
 
         const home = this.state.world.getHomeCoord()
 
-        for (let i = 0; i < staticParameters.NUM_OF_ANTS; i++) {
+        for (let i = 0; i < config.NUM_OF_ANTS; i++) {
             this.state.ants.push(new Ant(home[0], home[1]));
         }
     }

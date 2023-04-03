@@ -1,12 +1,11 @@
-import { Coordinate as Coordinate, AntState as SeekMode } from "../entities/Ant";
-import { Direction } from "./directions";
-import { antConfig, CellStates } from "../antConfig";
+import { antConfig } from "../config/antConfig";
 import { AntWorld, Cell } from "../entities/World";
+import { AntState, CellStates, Coordinate, Direction } from "../types";
 import { wrapCoordinateToWorld } from "../utils/coordinateUtil";
 
-export const getScoreForDirection = (direction: Direction, currentLocation: Coordinate, state: SeekMode, world: AntWorld, currentTick:number): number => {
+export const getScoreForDirection = (direction: Direction, currentLocation: Coordinate, state: AntState, world: AntWorld, currentTick:number): number => {
 
-    let range = antConfig.sight;
+    let range = antConfig().sight;
     let score = 0;
 
     const origX = currentLocation[0];
@@ -30,12 +29,12 @@ export const getScoreForDirection = (direction: Direction, currentLocation: Coor
     return score;
 }
 
-const scoreForCell = (c: Cell, antState: SeekMode, currentTick: number): number => {
+const scoreForCell = (c: Cell, antState: AntState, currentTick: number): number => {
 
     c.touchPheromones(currentTick);
 
     //searching food
-    if (antState === SeekMode.SEARCH_FOOD) {
+    if (antState === AntState.SEARCH_FOOD) {
         if (c.type === CellStates.FOOD) {
             return Number.MAX_VALUE
         } else {
