@@ -1,4 +1,6 @@
-export declare type configType = {
+import { Ant } from "./entities/Ant";
+import { AntWorld } from "./entities/World";
+export declare type ConfigType = {
     antLifespan: number;
     sight: number;
     foodPheremoneDecay: number;
@@ -31,6 +33,21 @@ export declare enum AntState {
     SEARCH_FOOD = 0,
     CARRY_FOOD = 1
 }
+export declare enum AntAction {
+    FOUND_FOOD = 0,
+    NESTED_FOOD = 1,
+    NO_ACTION = 2
+}
+export declare type SimulationState = {
+    ants: Ant[];
+    world: AntWorld;
+    statistics: SimulationStatistics;
+};
+export declare type SimulationStatistics = {
+    totalFoods: number;
+    foodsPicked: number;
+    foodsInNest: number;
+};
 export declare type Direction = {
     x: -1 | 0 | 1;
     y: -1 | 0 | 1;

@@ -3,7 +3,7 @@ import { getScoreForDirection } from "../logic/scoring";
 import { antConfig, staticParameters } from "../config/antConfig";
 import { getIndexWithCoordinate } from "../utils/coordinateUtil";
 import { AntWorld, Cell } from "./World";
-import { AntState, CellStates, Coordinate, Direction, directions, DirectionScore } from "../types";
+import { AntAction, AntState, CellStates, Coordinate, Direction, directions, DirectionScore } from "../types";
 
 
 /*
@@ -165,13 +165,15 @@ export class Ant {
         return newLocation;
     }
 
-    simulateAnt(world: AntWorld, currentTick: number) {
+    simulateAnt(world: AntWorld, currentTick: number): AntAction {
                     
+        let action = AntAction.NO_ACTION;
+
         if (this.isDead) {
             if (this.shouldRespawn()) {
                 this.respawnAtCell(world.getHomeCoord());
                 }
-            return;
+            return action;
         }
         
         let newLocation: Cell = this.exploreWorld(world, currentTick);
@@ -179,9 +181,11 @@ export class Ant {
         if (!!newLocation) {
 
             if (newLocation.type === CellStates.HOME) {
+                action = this.state === AntState.CARRY_FOOD ? AntAction.NESTED_FOOD : AntAction.NO_ACTION;
                 this.foundHome();
             }
             else if (newLocation.type === CellStates.FOOD) {
+                action = this.state === AntState.SEARCH_FOOD ? AntAction.FOUND_FOOD : AntAction.NO_ACTION;
                 this.foundFood(newLocation);
             }
 
@@ -192,6 +196,7 @@ export class Ant {
         }
 
         this.age++;
+        return action;
     }
 
 
@@ -211,7 +216,8 @@ export class Ant {
     private foundHome() {
         if (this.state === AntState.CARRY_FOOD) {
             this.state = AntState.SEARCH_FOOD;
-            this.turnAround(); 
+            this.turnAround();
+            this.stepsFromFood = undefined; 
         }
         this.stepsFromHome = 0;
     }
@@ -223,5 +229,6 @@ export class Ant {
             location.reduceFood();
         }
         this.stepsFromFood = 0;
+        //When ant finds food, it turns around. Should we make home pheromone undefined here?
     }
 }

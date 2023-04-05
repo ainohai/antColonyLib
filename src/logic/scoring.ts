@@ -43,7 +43,7 @@ const scoreForCell = (c: Cell, antState: AntState, currentTick: number): number 
     //Going home
     } else {
         if (c.type === CellStates.HOME) {
-            console.log("seeing home")
+            //console.log("seeing home")
             return Number.MAX_VALUE;
         } else {
             return c.homePheremone;

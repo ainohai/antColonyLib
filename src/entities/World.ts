@@ -1,6 +1,6 @@
 import { getCoordinateWithIndex, getIndexWithCoordinate, getValueWithCoordinate, wrapCoordinateToWorld } from '../utils/coordinateUtil';
 import { antConfig, staticParameters } from "../config/antConfig";
-import { CellStates, Coordinate, Direction } from '../types';
+import { CellStates, Coordinate, Direction, SimulationStatistics } from '../types';
 
 
 export class Cell {
@@ -50,13 +50,12 @@ export class AntWorld {
     cells: Cell[] = [];
     home: number = 0;
     foods: number[] = [];
-    
+
     constructor(columns: number, rows :number) {
         this.cells = [];
 
         this.createCells(columns, rows);
         this.setHome(Math.floor(columns/2), Math.floor(rows/2));
-        this.setFood(Math.floor(columns/2) + 135, Math.floor(rows/2) + 135, 1000);
     }
 
     getCell(x: number, y: number): (Cell | undefined) {  
@@ -114,7 +113,7 @@ export class AntWorld {
 
     }
 
-    private setFood(x: number, y: number, amount: number) {
+    public setFood(x: number, y: number, amount: number) {
         const cell = getValueWithCoordinate(this.cells, staticParameters().COLUMNS, x, y);
         const index = getIndexWithCoordinate(staticParameters().COLUMNS, staticParameters().ROWS, x, y);
         
@@ -125,6 +124,5 @@ export class AntWorld {
         cell.type = CellStates.FOOD;
         cell.foodCount = amount; 
         this.foods.push(index);
-
     }
 }

@@ -1,4 +1,4 @@
-import { configType as VariableConfigType, ParametersType } from "../types";
+import { ConfigType as VariableConfigType, ParametersType } from "../types";
 
 const defaultParameters: Readonly<ParametersType> = {
     COLUMNS: 500,

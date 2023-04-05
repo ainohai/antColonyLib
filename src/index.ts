@@ -2,7 +2,7 @@ import { antConfig, staticParameters } from "./config/antConfig";
 import { Ant } from "./entities/Ant";
 import { AntWorld } from "./entities/World";
 import { Simulation } from "./logic/Simulation";
-import { AntState, configType, ParametersType } from "./types";
+import { AntState, ConfigType, ParametersType } from "./types";
 
 
 export type { Ant };
@@ -15,21 +15,17 @@ export function getStaticParams(): Readonly<ParametersType> {
     return {...staticParameters()};
 }
 
-export function setVariableParameters(config: configType) {
-    setVariableParameters(config);
-}
-
-/** User should not be able to modify  */
-export function getConfig(): Readonly<configType> {
+/** User should not be able to modify config from here. 
+ * Should be possible to add support for changing the config during simulation by adding a new api method. */
+export function getConfig(): Readonly<ConfigType> {
     return {...antConfig()};
 }
   
-export function createSimulation(params: Partial<ParametersType>): Simulation{
-    return new Simulation(params);
+export function createSimulation(params: Partial<ParametersType>, variableParams: Partial<ConfigType>): Simulation{
+    return new Simulation(params, variableParams);
 }
   
 export default {
-    setVariableParameters,
     getConfig,
     getStaticParams,
     createSimulation,

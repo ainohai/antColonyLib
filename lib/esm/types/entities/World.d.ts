@@ -22,6 +22,6 @@ export declare class AntWorld {
     private createCells;
     moveInTheWorld(location: Coordinate, directions: Direction): Coordinate;
     private setHome;
-    private setFood;
+    setFood(x: number, y: number, amount: number): void;
 }
 //# sourceMappingURL=World.d.ts.map

@@ -1,20 +1,9 @@
-import { Ant } from '../entities/Ant';
-import { AntWorld } from '../entities/World';
-import { ParametersType } from '../types';
+import { ConfigType, ParametersType, SimulationState } from '../types';
 export declare class Simulation {
     tick: number;
-    state: {
-        ants: Ant[];
-        world: AntWorld;
-    };
-    constructor(params: Partial<ParametersType>);
-    run(): {
-        ants: Ant[];
-        world: AntWorld;
-    };
-    getState(): {
-        ants: Ant[];
-        world: AntWorld;
-    };
+    state: SimulationState;
+    constructor(params: Partial<ParametersType>, variableParams: Partial<ConfigType>);
+    run(): SimulationState;
+    getState(): SimulationState;
 }
 //# sourceMappingURL=Simulation.d.ts.map

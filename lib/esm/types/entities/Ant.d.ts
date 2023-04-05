@@ -1,5 +1,5 @@
 import { AntWorld, Cell } from "./World";
-import { AntState, Coordinate, Direction } from "../types";
+import { AntAction, AntState, Coordinate, Direction } from "../types";
 export declare class Ant {
     location: Coordinate;
     age: number;
@@ -16,7 +16,7 @@ export declare class Ant {
     turnAround(): void;
     move: (directions: Direction, world: AntWorld) => void;
     exploreWorld(world: AntWorld, tick: number): Cell;
-    simulateAnt(world: AntWorld, currentTick: number): void;
+    simulateAnt(world: AntWorld, currentTick: number): AntAction;
     private score;
     private foundHome;
     private foundFood;

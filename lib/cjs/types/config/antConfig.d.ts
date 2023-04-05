@@ -1,4 +1,4 @@
-import { configType as VariableConfigType, ParametersType } from "../types";
+import { ConfigType as VariableConfigType, ParametersType } from "../types";
 export declare const staticParameters: () => Readonly<ParametersType>;
 /** Use once before starting the simulation. */
 export declare const setStaticParameters: (parameters: Partial<ParametersType>) => Readonly<ParametersType>;
