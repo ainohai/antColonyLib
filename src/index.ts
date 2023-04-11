@@ -2,17 +2,23 @@ import { antConfig, staticParameters } from "./config/antConfig";
 import { Ant } from "./entities/Ant";
 import { AntWorld } from "./entities/World";
 import { Simulation } from "./logic/Simulation";
-import { AntState, ConfigType, ParametersType } from "./types";
+import { AntState, ConfigType, LastChoice, ParametersType } from "./types";
 
 
 export type { Ant };
 export type { AntWorld };
 export type { Simulation };
 export { AntState };
-export type {ParametersType};
+export type { ParametersType };
+export type { ConfigType };
+export { LastChoice };
 
 export function getStaticParams(): Readonly<ParametersType> {
     return {...staticParameters()};
+}
+
+export function getVariableParams(): ConfigType  {
+    return antConfig();
 }
 
 /** User should not be able to modify config from here. 

@@ -5,10 +5,12 @@ export declare type ConfigType = {
     sight: number;
     foodPheremoneDecay: number;
     homePheremoneDecay: number;
-    moveRandomPercentage: number;
+    antAnarchyRandomPercentage: number;
     moveForwardPercentage: number;
-    foodDistanceFactor: number;
-    homeDistanceFactor: number;
+    antFoodPheremoneDecay: number;
+    antHomePheremoneDecay: number;
+    antPheremoneWeight: number;
+    goodScoreTreshold: number;
 };
 export declare type ParametersType = {
     COLUMNS: number;
@@ -21,12 +23,17 @@ export declare enum CellStates {
     FOOD = 1,
     HOME = 2
 }
+export declare enum LastChoice {
+    ANARCHY = 0,
+    SNIFF = 1,
+    RANDOM = 2
+}
 export declare type Coordinate = [
     x: number,
     y: number
 ];
 export declare type DirectionScore = {
-    direction: Direction;
+    direction: number;
     score: number;
 };
 export declare enum AntState {

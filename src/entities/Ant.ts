@@ -1,9 +1,9 @@
-import { directionsForward, directionsLeft, directionsRight } from "../logic/directions";
 import { getScoreForDirection } from "../logic/scoring";
 import { antConfig, staticParameters } from "../config/antConfig";
 import { getIndexWithCoordinate } from "../utils/coordinateUtil";
 import { AntWorld, Cell } from "./World";
-import { AntAction, AntState, CellStates, Coordinate, Direction, directions, DirectionScore } from "../types";
+import { AntAction, AntState, CellStates, Coordinate, Direction, directions, DirectionScore, LastChoice } from "../types";
+import { toLeft, toRight } from "../logic/directions";
 
 
 /*
@@ -75,19 +75,14 @@ export class Ant {
     age: number = 0;
     currentAngle: number = 0; 
     state: AntState = AntState.SEARCH_FOOD;
-    stepsFromHome: number = 0;
+    stepsFromHome: number | undefined = 0;
     stepsFromFood: number | undefined = undefined;
-    
-    //For perf reasons. Would some buffer implementation be nice? We only should need one at time, as long as we are not doing things concurrently.
-    private directionScores: DirectionScore[] = [];
+    lastChoice: LastChoice = LastChoice.RANDOM;
+    hasAnarchy: number = 0;
 
     constructor(x: number, y: number) {
         this.location = [x, y];
         this.randomizeDirection();
-        //Right, forward left
-        for (let i = 0; i < 3; i++) {
-            this.directionScores.push({direction: directionsForward(this.currentAngle), score: 0 });
-        }
     }
 
     get isDead() {
@@ -122,34 +117,43 @@ export class Ant {
 
     exploreWorld(world: AntWorld, tick:number): Cell {
         
-        const directions: Direction[] = [directionsForward(this.currentAngle), directionsLeft(this.currentAngle), directionsRight(this.currentAngle)];
-        const scores =  this.score(directions, world, tick);
+        const scores =  this.score(this.currentAngle, world, tick);
 
         const forward = scores[0];
         scores.sort((o1, o2) => { return o2.score - o1.score});
         
         let chosen: DirectionScore|undefined = scores[0];
+       
+        const randomAngle = scores[Math.floor(Math.random() * scores.length)].direction;
+        const randomDirection: DirectionScore = {direction: randomAngle, 
+            score: getScoreForDirection(randomAngle, this.location, this.state, world, tick)};
 
-        //If no direction is particularly good, move at random.
-        //There's also a 20% chance the ant moves randomly even 
-        //if there is an optimal direction,
-        //just to give them a little more interesting behavior.
-        const random = Math.random();
-        if (random <= antConfig().moveForwardPercentage && forward.score >= 0) {
+        this.lastChoice = LastChoice.SNIFF;    
+
+
+        if (this.hasAnarchy > 0) {
             chosen = forward;
+            this.hasAnarchy = this.hasAnarchy - 1;
+            this.lastChoice = LastChoice.ANARCHY;
         }
-        else if (random > antConfig().moveForwardPercentage && random < (antConfig().moveRandomPercentage + antConfig().moveForwardPercentage)) {
-            const positiveScores = scores.filter(s => s.score > 0);
-            chosen = positiveScores.length > 0 ? positiveScores[Math.floor(Math.random() * positiveScores.length)] : undefined;
+
+        //Ant goes forward/random, unless good enough score is found aka treshold bigger than score
+        else if (((this.state === AntState.SEARCH_FOOD ? 1 : 0.5) * antConfig().goodScoreTreshold) >= chosen.score) {
+            this.lastChoice = LastChoice.RANDOM;
+
+            chosen = Math.random() <= antConfig().moveForwardPercentage && forward.score >= 0 ? forward : randomDirection;
+
         }
 
         //Move the ant. 
         if (!!chosen && chosen.score >= 0) {
-            this.move(chosen.direction, world);
+            this.move(directions[chosen.direction], world);
+            this.currentAngle = chosen.direction;
         }
         else {
             //Randomize direction and try again next round
             this.randomizeDirection();
+            console.log("Randomized")
         }
 
         const newLocation = world.getCell(this.location[0], this.location[1]);
@@ -159,8 +163,13 @@ export class Ant {
             with index ${getIndexWithCoordinate(staticParameters().COLUMNS, staticParameters().ROWS, this.location[0], this.location[1])}`);
         }
 
-        this.stepsFromHome += 1;
-        this.stepsFromFood = this.stepsFromFood === undefined ? undefined : this.stepsFromFood + 1;
+        if(this.state === AntState.SEARCH_FOOD) {
+            this.stepsFromHome = this.stepsFromHome === undefined ? 0 : this.stepsFromHome + 1;
+            this.stepsFromFood = undefined;
+        } else if (this.state === AntState.CARRY_FOOD) {
+            this.stepsFromHome = undefined;
+            this.stepsFromFood = this.stepsFromFood === undefined ? 0 : this.stepsFromFood + 1;
+        }
 
         return newLocation;
     }
@@ -195,21 +204,32 @@ export class Ant {
             this.age = antConfig().antLifespan + 1;
         }
 
+        if (Math.random() <= antConfig().antAnarchyRandomPercentage) {
+            this.randomizeDirection();
+            this.hasAnarchy = 10;
+        }
+
         this.age++;
         return action;
     }
 
 
-    private score(directions: Direction[], world: AntWorld, tick: number): DirectionScore[] {
+    private score(currentAngle: number, world: AntWorld, tick: number): DirectionScore[] {
 
-        const scores: DirectionScore[] = this.directionScores;
+        const nextAngles = [currentAngle, toLeft(currentAngle, 1), 
+            toRight(currentAngle, 1)];
 
-        directions.forEach((direction, index) => { 
-            //We are reusing the old object here for performance reasons. This is not elegant, but hopefully more efficient. 
-            let score = scores[index];
-            score.direction = direction,
-            score.score = getScoreForDirection(direction, this.location, this.state, world, tick)}
-            );
+       const scores: DirectionScore[] = []
+
+       if (scores.length > nextAngles.length) {
+        throw "Should clean the old object!!"
+       }
+
+        nextAngles.forEach((angle, index) => { 
+            let score: DirectionScore = { direction: angle, score: getScoreForDirection(angle, this.location, this.state, world, tick)}
+            scores.push(score);
+        });
+
         return scores;
     }
 
@@ -227,6 +247,7 @@ export class Ant {
             this.state = AntState.CARRY_FOOD;
             this.turnAround();
             location.reduceFood();
+            this.stepsFromHome = undefined;
         }
         this.stepsFromFood = 0;
         //When ant finds food, it turns around. Should we make home pheromone undefined here?

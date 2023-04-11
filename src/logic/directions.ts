@@ -15,21 +15,15 @@ export const directions: (Readonly<Direction>)[] = [
     { x: -1, y: -1 } //NW
 ];
 
-export const directionsForward = (currentAngle: number): Direction => {
+export const directionsWithIndex = (currentAngle: number): Direction => {
     return directions[currentAngle];
 }
 
-export const directionsLeft = (currentAngle: number): Direction => {
-    let directionsLeft = currentAngle - 1;
-    if (directionsLeft < 0) {
-        directionsLeft = directions.length - 1;
-    }
-
-    return directions[directionsLeft];
+export const toLeft = (currentAngle: number, steps: number): number => {
+    return currentAngle >= steps ? currentAngle - steps : directions.length - (steps - currentAngle);
 }
 
-export const directionsRight = (currentAngle: number): Direction => {
-    const directionsRight = (currentAngle + 1) % directions.length;
-    return directions[directionsRight]
+export const toRight = (currentAngle: number, steps: number): number => {
+    return (currentAngle + steps) % directions.length;
 }
 

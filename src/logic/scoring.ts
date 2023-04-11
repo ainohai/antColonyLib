@@ -2,8 +2,9 @@ import { antConfig } from "../config/antConfig";
 import { AntWorld, Cell } from "../entities/World";
 import { AntState, CellStates, Coordinate, Direction } from "../types";
 import { wrapCoordinateToWorld } from "../utils/coordinateUtil";
+import { directions } from "./directions";
 
-export const getScoreForDirection = (direction: Direction, currentLocation: Coordinate, state: AntState, world: AntWorld, currentTick:number): number => {
+export const getScoreForDirection = (directionIndex: number, currentLocation: Coordinate, state: AntState, world: AntWorld, currentTick:number): number => {
 
     let range = antConfig().sight;
     let score = 0;
@@ -11,20 +12,22 @@ export const getScoreForDirection = (direction: Direction, currentLocation: Coor
     const origX = currentLocation[0];
     const origY = currentLocation[1];
 
+    const direction = directions[directionIndex];
+
     for (let i = 1; i <= range; i++) {
 
         let newLocationX = origX + i * direction.x;
         let newLocationY = origY + i * direction.y;
 
-        let c = world.getCell(newLocationX, newLocationY);
-        
-        if (!!c) {
-            var cellScore = scoreForCell(c, state, currentTick);
+            let c = world.getCell(newLocationX, newLocationY);
+            
+            if (!!c) {
+                var cellScore = scoreForCell(c, state, currentTick);
 
-            let distanceOptimizedScore = cellScore * (1 / (Math.sqrt(Math.pow(i, 2) + Math.pow(i, 2)) * (range + 1)));
-            score = score + distanceOptimizedScore;
+                let distanceOptimizedScore = cellScore * (antConfig().sight / (Math.sqrt(Math.pow(i, 2) + Math.pow(i, 2)) * (range + 1)));
+                score = score + cellScore;
 
-        }
+    }
     }
     return score;
 }
@@ -36,6 +39,7 @@ const scoreForCell = (c: Cell, antState: AntState, currentTick: number): number 
     //searching food
     if (antState === AntState.SEARCH_FOOD) {
         if (c.type === CellStates.FOOD) {
+            //If it's food, we don't care about pheremones
             return Number.MAX_VALUE
         } else {
             return c.foodPheremone;

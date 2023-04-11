@@ -1,13 +1,14 @@
 import { AntWorld, Cell } from "./World";
-import { AntAction, AntState, Coordinate, Direction } from "../types";
+import { AntAction, AntState, Coordinate, Direction, LastChoice } from "../types";
 export declare class Ant {
     location: Coordinate;
     age: number;
     currentAngle: number;
     state: AntState;
-    stepsFromHome: number;
+    stepsFromHome: number | undefined;
     stepsFromFood: number | undefined;
-    private directionScores;
+    lastChoice: LastChoice;
+    hasAnarchy: number;
     constructor(x: number, y: number);
     get isDead(): boolean;
     respawnAtCell(homeCoord: Coordinate): void;

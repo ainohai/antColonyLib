@@ -6,10 +6,12 @@ export type ConfigType = {
     sight: number;
     foodPheremoneDecay: number;
     homePheremoneDecay: number;
-    moveRandomPercentage: number;
+    antAnarchyRandomPercentage: number;
     moveForwardPercentage: number;
-    foodDistanceFactor: number;
-    homeDistanceFactor: number;
+    antFoodPheremoneDecay: number
+    antHomePheremoneDecay: number;
+    antPheremoneWeight: number;
+    goodScoreTreshold: number;
 };
 export type ParametersType = {
     COLUMNS: number;
@@ -24,12 +26,18 @@ export enum CellStates {
     HOME
 };
 
+export enum LastChoice {
+    ANARCHY, 
+    SNIFF, 
+    RANDOM
+}
+
 export type Coordinate = [
     x: number, 
     y: number
 ]
 
-export type DirectionScore = {direction: Direction, score: number}
+export type DirectionScore = {direction: number, score: number}
 
 export enum AntState {
     SEARCH_FOOD,
@@ -68,3 +76,15 @@ export const directions: (Readonly<Direction>)[] = [
     { x: -1, y: 0 }, //W,
     { x: -1, y: -1 } //NW
 ];
+
+export enum PheremoneType {
+    SUGAR,
+    HOME
+}
+
+export type Pheremone = {
+    type: PheremoneType,
+    pheremoneCellDecay: () => number,
+    pheremoneAntDecay: () => number,
+    goodScoreThreshold: () => number
+}

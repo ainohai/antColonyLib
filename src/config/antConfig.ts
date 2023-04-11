@@ -10,16 +10,18 @@ const defaultParameters: Readonly<ParametersType> = {
 const defaultVariableParams: Readonly<VariableConfigType> = {
     antLifespan: 10000,
     sight: 10,
-    foodPheremoneDecay: 0.2,
-    homePheremoneDecay: 0.2,
-    moveRandomPercentage: 0.1,
-    moveForwardPercentage: 0.1,
-    foodDistanceFactor: 1,
-    homeDistanceFactor: 1,
+    foodPheremoneDecay: 0.005,
+    homePheremoneDecay: 0.001,
+    antAnarchyRandomPercentage: 0.01, //chance not to move where you should
+    moveForwardPercentage: 0.75, // When seeking food. Ants are this likely to just move forward, otherwise they will select random 
+    antFoodPheremoneDecay: 0.007,
+    antHomePheremoneDecay: 0.01,
+    antPheremoneWeight: 10,
+    goodScoreTreshold: 0.0004
 };
 
 let params: ParametersType;
-let confs: VariableConfigType = defaultVariableParams;
+let confs: VariableConfigType | undefined;;
 
 export const staticParameters = (): Readonly<ParametersType> => {
     if (!params) {
@@ -31,18 +33,21 @@ export const staticParameters = (): Readonly<ParametersType> => {
 /** Use once before starting the simulation. */
 export const setStaticParameters = (parameters: Partial<ParametersType>): Readonly<ParametersType> => {
     if (!!params) {
-        throw Error("Static parameters are already set");
+        console.log("Static parameters are already set");
     }
     params = {...defaultParameters, ...parameters}
     return params;
 }
 
-export const antConfig = (): Readonly<VariableConfigType> => {
+export const antConfig = (): VariableConfigType => {
+    if (!confs) {
+        throw "Trying to use confs before setting them"
+    }
     return confs;
 };
 
 /** Can be used during the simulation */
 export const setVariableParameters = (configs: Partial<VariableConfigType>): Readonly<VariableConfigType> => {
-    confs = {...confs, ...configs}
+    confs = !!confs ? {...confs, ...configs} : {...defaultVariableParams, ...configs}
     return confs;
 }

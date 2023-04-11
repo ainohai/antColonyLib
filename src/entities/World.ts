@@ -2,6 +2,7 @@ import { getCoordinateWithIndex, getIndexWithCoordinate, getValueWithCoordinate,
 import { antConfig, staticParameters } from "../config/antConfig";
 import { CellStates, Coordinate, Direction, SimulationStatistics } from '../types';
 
+const MAX_CELL_PHEREMONE = 1;
 
 export class Cell {
     type: CellStates = CellStates.EMPTY;
@@ -26,22 +27,32 @@ export class Cell {
         if (this.touched === currentTick) {
             return;
         }
-        //Doesn't have to worry about concurrency. 
-        this.touched = currentTick;
+
+        //Doesn't worry about concurrency. 
         const evaporationTime = currentTick - this.touched;
 
-        this.foodPheremone = this.foodPheremone - (this.foodPheremone * antConfig().foodPheremoneDecay * evaporationTime);
-        this.homePheremone = this.homePheremone - (this.homePheremone * antConfig().homePheremoneDecay * evaporationTime);
+        const food = this.foodPheremone * (1 - antConfig().foodPheremoneDecay * evaporationTime);
+        const home = this.homePheremone * (1 -  antConfig().homePheremoneDecay * evaporationTime);
+
+        this.foodPheremone = food > 0 ? food : 0;
+        this.homePheremone = home > 0 ? home : 0
+
+        this.touched = currentTick;
 
     }
 
-    addPheremone(stepsFromHome: number, stepsFromFood: number | undefined, currentTick: number) {
+    addPheremone(stepsFromHome: number | undefined, stepsFromFood: number | undefined, currentTick: number) {
         this.touchPheromones(currentTick);
 
         if (!!stepsFromFood ){ 
-            this.foodPheremone = this.foodPheremone + (antConfig().foodDistanceFactor/stepsFromFood);
+            const foodPheremoneAdd = antConfig().antPheremoneWeight * (1 - (antConfig().antFoodPheremoneDecay * (stepsFromFood)));
+
+            this.foodPheremone = this.foodPheremone + (foodPheremoneAdd > 0 ? foodPheremoneAdd : 0);
         }
-            this.homePheremone = this.homePheremone + (antConfig().homeDistanceFactor/stepsFromHome);
+        if (!!stepsFromHome){
+            const homePheremoneAdd = antConfig().antPheremoneWeight * (1 - (antConfig().antHomePheremoneDecay * stepsFromHome))
+            this.homePheremone = this.homePheremone + (homePheremoneAdd > 0 ? homePheremoneAdd : 0);
+        }
     }
 }
 
@@ -49,7 +60,7 @@ export class AntWorld {
 
     cells: Cell[] = [];
     home: number = 0;
-    foods: number[] = [];
+    private foods: number[] = [];
 
     constructor(columns: number, rows :number) {
         this.cells = [];
@@ -67,11 +78,25 @@ export class AntWorld {
         return this.cells[this.home];
     }
 
+
     getFoodCoordinates(): [number, number][] {
         const foods :[number, number][] = [];
+
+        this.foods = this.foods.filter(index => {
+            const coordinate = getCoordinateWithIndex(staticParameters().COLUMNS, index);
+            const cell = this.getCell(coordinate[0], coordinate[1]);
+            return cell?.type === CellStates.FOOD || false;
+        });
+
         for (let food of this.foods) {
             foods.push(getCoordinateWithIndex(staticParameters().COLUMNS, food));
         }
+
+        if (this.foods.length < 10) {
+            this.setFood(Math.floor(Math.random() * staticParameters().COLUMNS), Math.floor(Math.random() * 
+            staticParameters().ROWS), Math.floor(Math.random() *100));
+        }
+
         return foods;
     }
 

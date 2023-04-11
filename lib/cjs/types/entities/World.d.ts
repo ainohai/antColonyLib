@@ -8,12 +8,12 @@ export declare class Cell {
     constructor();
     reduceFood(): void;
     touchPheromones(currentTick: number): void;
-    addPheremone(stepsFromHome: number, stepsFromFood: number | undefined, currentTick: number): void;
+    addPheremone(stepsFromHome: number | undefined, stepsFromFood: number | undefined, currentTick: number): void;
 }
 export declare class AntWorld {
     cells: Cell[];
     home: number;
-    foods: number[];
+    private foods;
     constructor(columns: number, rows: number);
     getCell(x: number, y: number): (Cell | undefined);
     getHome(): Cell;
