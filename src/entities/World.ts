@@ -1,16 +1,17 @@
 import { getCoordinateWithIndex, getIndexWithCoordinate, getValueWithCoordinate, wrapCoordinateToWorld } from '../utils/coordinateUtil';
 import { antConfig, staticParameters } from "../config/antConfig";
-import { CellStates, Coordinate, Direction, SimulationStatistics } from '../types';
+import { CellStates, Coordinate, Direction, Pheremone, PheremoneType, SimulationStatistics } from '../types';
 
 const MAX_CELL_PHEREMONE = 1;
 
 export class Cell {
     type: CellStates = CellStates.EMPTY;
-    foodPheremone: number = 0;
-    homePheremone: number = 0;
+    //foodPheremone: number = 0;
+    //homePheremone: number = 0;
     foodCount: number = 0;
     //simulation cycle when pheromones were last calculated. 
     touched: number = 0;
+    pheremones: PheremoneType[];
 
     constructor() {
     }

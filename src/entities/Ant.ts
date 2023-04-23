@@ -1,9 +1,8 @@
-import { getScoreForDirection } from "../logic/scoring";
 import { antConfig, staticParameters } from "../config/antConfig";
 import { getIndexWithCoordinate } from "../utils/coordinateUtil";
 import { AntWorld, Cell } from "./World";
-import { AntAction, AntState, CellStates, Coordinate, Direction, directions, DirectionScore, LastChoice } from "../types";
-import { toLeft, toRight } from "../logic/directions";
+import { AntAction, AntDecisionModeType, AntPheremone, AntState, CellStates, ChoiceType, Coordinate, Direction, directions, DirectionScore, PheremoneType } from "../types";
+import { modeActions } from "./AntState";
 
 
 /*
@@ -69,34 +68,48 @@ Array fetch took 29623.799999952316 milliseconds.
 Object fetch took 29178.099999904633 milliseconds.
  */
 
+const initialState: AntState = {
+    lockedInStateUntilTick: undefined,
+    startedInStateOnTick: 0,
+    hasFood: true,
+    mode: AntDecisionModeType.SEARCHING_FOOD, 
+    lastChoice: ChoiceType.UNKNOWN
+}
+const initialPheremone: AntPheremone = {
+    type: PheremoneType.HOME,
+    pickedUpPheremoneOnTick: 0
+}
+
 
 export class Ant {
+    id: Readonly<string>; // for saving simulation results. 
     location: Coordinate;
-    age: number = 0;
+    ageLeft: number = 0;
     currentAngle: number = 0; 
-    state: AntState = AntState.SEARCH_FOOD;
-    stepsFromHome: number | undefined = 0;
-    stepsFromFood: number | undefined = undefined;
-    lastChoice: LastChoice = LastChoice.RANDOM;
-    hasAnarchy: number = 0;
+    state: AntState;
+    //Only one pheremone at time, could be more.
+    pheremone: AntPheremone | undefined;
 
-    constructor(x: number, y: number) {
+    constructor(x: number, y: number, id: string) {
         this.location = [x, y];
         this.randomizeDirection();
+        this.ageLeft = antConfig().antLifespan;
+        this.state = initialState;
+        this.pheremone = initialPheremone;
+        this.id = id
     }
 
     get isDead() {
-        return this.age > antConfig().antLifespan;
+        return this.ageLeft <= 0;
     }
 
     respawnAtCell(homeCoord: Coordinate) {
         this.location[0] = homeCoord[0];
         this.location[1] = homeCoord[1];
-        this.state = AntState.SEARCH_FOOD;
+        this.state = initialState;
+        this.pheremone = initialPheremone;
         this.randomizeDirection();
-        this.age = 0;
-        this.stepsFromFood = undefined;
-        this.stepsFromHome = 0;
+        this.ageLeft = antConfig().antLifespan;
     }
 
     shouldRespawn() {
@@ -117,42 +130,19 @@ export class Ant {
 
     exploreWorld(world: AntWorld, tick:number): Cell {
         
-        const scores =  this.score(this.currentAngle, world, tick);
-
-        const forward = scores[0];
-        scores.sort((o1, o2) => { return o2.score - o1.score});
+        const actions = modeActions(this.state.mode);
+        const chosen = actions.chosen(this, world, tick);
         
-        let chosen: DirectionScore|undefined = scores[0];
-       
-        const randomAngle = scores[Math.floor(Math.random() * scores.length)].direction;
-        const randomDirection: DirectionScore = {direction: randomAngle, 
-            score: getScoreForDirection(randomAngle, this.location, this.state, world, tick)};
-
-        this.lastChoice = LastChoice.SNIFF;    
-
-
-        if (this.hasAnarchy > 0) {
-            chosen = forward;
-            this.hasAnarchy = this.hasAnarchy - 1;
-            this.lastChoice = LastChoice.ANARCHY;
-        }
-
-        //Ant goes forward/random, unless good enough score is found aka treshold bigger than score
-        else if (((this.state === AntState.SEARCH_FOOD ? 1 : 0.5) * antConfig().goodScoreTreshold) >= chosen.score) {
-            this.lastChoice = LastChoice.RANDOM;
-
-            chosen = Math.random() <= antConfig().moveForwardPercentage && forward.score >= 0 ? forward : randomDirection;
-
-        }
-
         //Move the ant. 
         if (!!chosen && chosen.score >= 0) {
             this.move(directions[chosen.direction], world);
             this.currentAngle = chosen.direction;
+            this.state.lastChoice = chosen.choiceType ?? ChoiceType.UNKNOWN;
         }
         else {
             //Randomize direction and try again next round
             this.randomizeDirection();
+            this.state.lastChoice =  ChoiceType.UNKNOWN;
             console.log("Randomized")
         }
 
@@ -161,14 +151,6 @@ export class Ant {
         if (!newLocation) {
             throw new Error(`No cell found for ant in (${this.location[0]}, ${this.location[1]}) 
             with index ${getIndexWithCoordinate(staticParameters().COLUMNS, staticParameters().ROWS, this.location[0], this.location[1])}`);
-        }
-
-        if(this.state === AntState.SEARCH_FOOD) {
-            this.stepsFromHome = this.stepsFromHome === undefined ? 0 : this.stepsFromHome + 1;
-            this.stepsFromFood = undefined;
-        } else if (this.state === AntState.CARRY_FOOD) {
-            this.stepsFromHome = undefined;
-            this.stepsFromFood = this.stepsFromFood === undefined ? 0 : this.stepsFromFood + 1;
         }
 
         return newLocation;
@@ -187,69 +169,60 @@ export class Ant {
         
         let newLocation: Cell = this.exploreWorld(world, currentTick);
         
+        action = this.moveActions(newLocation, action, currentTick);
+
+        this.ageLeft = this.ageLeft - 1;
+
+        return action;
+    }
+
+    private moveActions(newLocation: Cell, action: AntAction, currentTick: number) {
         if (!!newLocation) {
 
             if (newLocation.type === CellStates.HOME) {
-                action = this.state === AntState.CARRY_FOOD ? AntAction.NESTED_FOOD : AntAction.NO_ACTION;
-                this.foundHome();
+                action = this.foundHome(currentTick);
             }
             else if (newLocation.type === CellStates.FOOD) {
-                action = this.state === AntState.SEARCH_FOOD ? AntAction.FOUND_FOOD : AntAction.NO_ACTION;
-                this.foundFood(newLocation);
+                action = this.foundFood(newLocation, currentTick);
             }
 
-        newLocation.addPheremone(this.stepsFromHome, this.stepsFromFood, currentTick);
-        }
-        else {
-            this.age = antConfig().antLifespan + 1;
+            newLocation.addPheremone(this.stepsFromHome, this.stepsFromFood, currentTick);
         }
 
         if (Math.random() <= antConfig().antAnarchyRandomPercentage) {
             this.randomizeDirection();
-            this.hasAnarchy = 10;
+            this.state.lockedInStateUntilTick = currentTick + 10;
+            this.state.mode = AntDecisionModeType.ANARCHY;
         }
-
-        this.age++;
         return action;
     }
 
-
-    private score(currentAngle: number, world: AntWorld, tick: number): DirectionScore[] {
-
-        const nextAngles = [currentAngle, toLeft(currentAngle, 1), 
-            toRight(currentAngle, 1)];
-
-       const scores: DirectionScore[] = []
-
-       if (scores.length > nextAngles.length) {
-        throw "Should clean the old object!!"
-       }
-
-        nextAngles.forEach((angle, index) => { 
-            let score: DirectionScore = { direction: angle, score: getScoreForDirection(angle, this.location, this.state, world, tick)}
-            scores.push(score);
-        });
-
-        return scores;
-    }
-
-    private foundHome() {
-        if (this.state === AntState.CARRY_FOOD) {
-            this.state = AntState.SEARCH_FOOD;
+    private foundHome(tick: number): AntAction {
+        let action = AntAction.NO_ACTION;
+        if (this.state.mode === AntDecisionModeType.SEARHCING_HOME) {
+            action = AntAction.NESTED_FOOD;
+            this.state.mode = AntDecisionModeType.SEARCHING_FOOD;
+            this.state.hasFood = false;
             this.turnAround();
-            this.stepsFromFood = undefined; 
+            this.state.startedInStateOnTick = tick; 
         }
-        this.stepsFromHome = 0;
+        //Should we count steps from home, if ant is looking for home??
+        
+
+        return action;
     }
 
-    private foundFood(location: Cell) {
-        if (this.state === AntState.SEARCH_FOOD) {
-            this.state = AntState.CARRY_FOOD;
+    private foundFood(location: Cell, tick: number) {
+        let action = AntAction.NO_ACTION;
+        if (this.state.mode === AntDecisionModeType.SEARCHING_FOOD) {
+            this.state.mode = AntDecisionModeType.SEARHCING_HOME;
+            this.state.hasFood = true;
             this.turnAround();
             location.reduceFood();
-            this.stepsFromHome = undefined;
+            this.state.startedInStateOnTick = tick;
+            action = AntAction.FOUND_FOOD;
         }
-        this.stepsFromFood = 0;
-        //When ant finds food, it turns around. Should we make home pheromone undefined here?
+
+        return action;
     }
 }

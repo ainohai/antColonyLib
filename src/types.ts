@@ -26,10 +26,11 @@ export enum CellStates {
     HOME
 };
 
-export enum LastChoice {
+export enum ChoiceType {
     ANARCHY, 
     SNIFF, 
-    RANDOM
+    RANDOM,
+    UNKNOWN
 }
 
 export type Coordinate = [
@@ -37,12 +38,8 @@ export type Coordinate = [
     y: number
 ]
 
-export type DirectionScore = {direction: number, score: number}
+export type DirectionScore = {direction: number, score: number, choiceType?: ChoiceType }
 
-export enum AntState {
-    SEARCH_FOOD,
-    CARRY_FOOD
-}
 export enum AntAction {
     FOUND_FOOD,
     NESTED_FOOD,
@@ -77,6 +74,12 @@ export const directions: (Readonly<Direction>)[] = [
     { x: -1, y: -1 } //NW
 ];
 
+export enum AntDecisionModeType {
+    SEARHCING_HOME = 0,
+    SEARCHING_FOOD = 1,
+    ANARCHY = 2
+}
+
 export enum PheremoneType {
     SUGAR,
     HOME
@@ -87,4 +90,16 @@ export type Pheremone = {
     pheremoneCellDecay: () => number,
     pheremoneAntDecay: () => number,
     goodScoreThreshold: () => number
+}
+
+export type AntState = {
+    mode: AntDecisionModeType,
+    startedInStateOnTick: number,
+    lockedInStateUntilTick: number | undefined,
+    hasFood: boolean,
+    lastChoice: ChoiceType,
+}
+export type AntPheremone = {
+    type: PheremoneType,
+    pickedUpPheremoneOnTick: number
 }

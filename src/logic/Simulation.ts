@@ -32,7 +32,7 @@ export class Simulation {
         this.state.statistics.totalFoods = numOfFood + numOfFood + numOfFood/2;
 
         for (let i = 0; i < config.NUM_OF_ANTS; i++) {
-            this.state.ants.push(new Ant(home[0], home[1]));
+            this.state.ants.push(new Ant(home[0], home[1], `ant-${i}`));
         }
     }
 

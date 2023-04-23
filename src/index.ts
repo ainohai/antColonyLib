@@ -2,7 +2,7 @@ import { antConfig, staticParameters } from "./config/antConfig";
 import { Ant } from "./entities/Ant";
 import { AntWorld } from "./entities/World";
 import { Simulation } from "./logic/Simulation";
-import { AntState, ConfigType, LastChoice, ParametersType } from "./types";
+import { AntState, ChoiceType, ConfigType, ParametersType } from "./types";
 
 
 export type { Ant };
@@ -11,7 +11,7 @@ export type { Simulation };
 export { AntState };
 export type { ParametersType };
 export type { ConfigType };
-export { LastChoice };
+export { ChoiceType };
 
 export function getStaticParams(): Readonly<ParametersType> {
     return {...staticParameters()};
