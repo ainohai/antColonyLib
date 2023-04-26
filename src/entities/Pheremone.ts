@@ -12,7 +12,7 @@ const pheremoneFactory = (type: PheremoneType): Readonly<Pheremone> => {
             type: type,
             pheremoneCellDecay: () => antConfig().homePheremoneDecay,
             pheremoneAntDecay: () => antConfig().antHomePheremoneDecay,
-            goodScoreThreshold: () => antConfig().goodScoreTreshold
+            goodScoreThreshold: () => antConfig().goodHomeScoreTreshold
         }
     }
     else if (type === PheremoneType.SUGAR) {
@@ -20,7 +20,7 @@ const pheremoneFactory = (type: PheremoneType): Readonly<Pheremone> => {
             type: type,
             pheremoneCellDecay: () => antConfig().foodPheremoneDecay,
             pheremoneAntDecay: () => antConfig().antFoodPheremoneDecay,
-            goodScoreThreshold: () => antConfig().goodScoreTreshold
+            goodScoreThreshold: () => antConfig().goodFoodScoreTreshold
         }
     }
     throw "Not known pheremone"

@@ -4,5 +4,5 @@ export declare const staticParameters: () => Readonly<ParametersType>;
 export declare const setStaticParameters: (parameters: Partial<ParametersType>) => Readonly<ParametersType>;
 export declare const antConfig: () => VariableConfigType;
 /** Can be used during the simulation */
-export declare const setVariableParameters: (configs: Partial<VariableConfigType>) => Readonly<VariableConfigType>;
+export declare const setVariableParameters: (configs: VariableConfigType) => Readonly<VariableConfigType>;
 //# sourceMappingURL=antConfig.d.ts.map

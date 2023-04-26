@@ -16,8 +16,11 @@ const defaultVariableParams: Readonly<VariableConfigType> = {
     moveForwardPercentage: 0.75, // When seeking food. Ants are this likely to just move forward, otherwise they will select random 
     antFoodPheremoneDecay: 0.007,
     antHomePheremoneDecay: 0.01,
-    antPheremoneWeight: 10,
-    goodScoreTreshold: 0.0004
+    antFoodPheremoneWeight: 10,
+    antHomePheremoneWeight: 10,
+    goodFoodScoreTreshold: 0.0004,
+    goodHomeScoreTreshold: 0.0002,
+    maxPheremone: 100
 };
 
 let params: ParametersType;
@@ -47,7 +50,7 @@ export const antConfig = (): VariableConfigType => {
 };
 
 /** Can be used during the simulation */
-export const setVariableParameters = (configs: Partial<VariableConfigType>): Readonly<VariableConfigType> => {
-    confs = !!confs ? {...confs, ...configs} : {...defaultVariableParams, ...configs}
+export const setVariableParameters = (configs: VariableConfigType): Readonly<VariableConfigType> => {
+    confs = configs;
     return confs;
 }

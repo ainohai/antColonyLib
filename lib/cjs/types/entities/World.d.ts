@@ -1,14 +1,15 @@
-import { CellStates, Coordinate, Direction } from '../types';
+import { CellStates, Coordinate, Direction, PheremoneType } from '../types';
 export declare class Cell {
     type: CellStates;
-    foodPheremone: number;
-    homePheremone: number;
     foodCount: number;
     touched: number;
+    homePheremone: number;
+    foodPheremone: number;
     constructor();
     reduceFood(): void;
     touchPheromones(currentTick: number): void;
-    addPheremone(stepsFromHome: number | undefined, stepsFromFood: number | undefined, currentTick: number): void;
+    boundPheremone(min: number, max: number, current: number, addition: number): number;
+    addPheremone(pheremoneType: PheremoneType, startingStep: number, currentTick: number): void;
 }
 export declare class AntWorld {
     cells: Cell[];

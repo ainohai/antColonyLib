@@ -1,8 +1,8 @@
-import { ConfigType, ParametersType, SimulationState } from '../types';
+import { ParametersType, SimulationState } from '../types';
 export declare class Simulation {
     tick: number;
     state: SimulationState;
-    constructor(params: Partial<ParametersType>, variableParams: Partial<ConfigType>);
+    constructor(params: Partial<ParametersType>);
     run(): SimulationState;
     getState(): SimulationState;
 }

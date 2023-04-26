@@ -1,15 +1,13 @@
 import { AntWorld, Cell } from "./World";
-import { AntAction, AntState, Coordinate, Direction, LastChoice } from "../types";
+import { AntAction, AntPheremone, AntState, Coordinate, Direction } from "../types";
 export declare class Ant {
+    id: Readonly<string>;
     location: Coordinate;
-    age: number;
+    ageLeft: number;
     currentAngle: number;
     state: AntState;
-    stepsFromHome: number | undefined;
-    stepsFromFood: number | undefined;
-    lastChoice: LastChoice;
-    hasAnarchy: number;
-    constructor(x: number, y: number);
+    pheremone: AntPheremone | undefined;
+    constructor(x: number, y: number, id: string);
     get isDead(): boolean;
     respawnAtCell(homeCoord: Coordinate): void;
     shouldRespawn(): boolean;
@@ -18,7 +16,7 @@ export declare class Ant {
     move: (directions: Direction, world: AntWorld) => void;
     exploreWorld(world: AntWorld, tick: number): Cell;
     simulateAnt(world: AntWorld, currentTick: number): AntAction;
-    private score;
+    private moveActions;
     private foundHome;
     private foundFood;
 }

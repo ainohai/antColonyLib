@@ -71,7 +71,7 @@ Object fetch took 29178.099999904633 milliseconds.
 const initialState: AntState = {
     lockedInStateUntilTick: undefined,
     startedInStateOnTick: 0,
-    hasFood: true,
+    hasFood: false,
     mode: AntDecisionModeType.SEARCHING_FOOD, 
     lastChoice: ChoiceType.UNKNOWN
 }
@@ -94,8 +94,8 @@ export class Ant {
         this.location = [x, y];
         this.randomizeDirection();
         this.ageLeft = antConfig().antLifespan;
-        this.state = initialState;
-        this.pheremone = initialPheremone;
+        this.state = {...initialState};
+        this.pheremone = {...initialPheremone};
         this.id = id
     }
 
@@ -173,6 +173,12 @@ export class Ant {
 
         this.ageLeft = this.ageLeft - 1;
 
+        if(this.state.lockedInStateUntilTick === currentTick) {
+            this.state.mode = this.state.hasFood ? AntDecisionModeType.SEARHCING_HOME : AntDecisionModeType.SEARCHING_FOOD;
+            this.state.lockedInStateUntilTick = undefined; 
+            this.state.startedInStateOnTick = currentTick;
+        }
+
         return action;
     }
 
@@ -186,12 +192,18 @@ export class Ant {
                 action = this.foundFood(newLocation, currentTick);
             }
 
-            newLocation.addPheremone(this.stepsFromHome, this.stepsFromFood, currentTick);
+            if (!!this.pheremone?.type !== undefined && this.pheremone?.pickedUpPheremoneOnTick !== undefined) {
+                newLocation.addPheremone(this.pheremone?.type, this.pheremone?.pickedUpPheremoneOnTick, currentTick);
+            }
         }
 
-        if (Math.random() <= antConfig().antAnarchyRandomPercentage) {
+        const random = Math.random();
+        if (antConfig().antAnarchyRandomPercentage &&  random <= antConfig().antAnarchyRandomPercentage) {
+            console.log("anarcgy: " + antConfig().antAnarchyRandomPercentage);
+            
             this.randomizeDirection();
             this.state.lockedInStateUntilTick = currentTick + 10;
+            this.state.startedInStateOnTick = currentTick;
             this.state.mode = AntDecisionModeType.ANARCHY;
         }
         return action;
@@ -204,7 +216,8 @@ export class Ant {
             this.state.mode = AntDecisionModeType.SEARCHING_FOOD;
             this.state.hasFood = false;
             this.turnAround();
-            this.state.startedInStateOnTick = tick; 
+            this.state.startedInStateOnTick = tick;
+            this.pheremone = {pickedUpPheremoneOnTick: tick, type: PheremoneType.HOME} 
         }
         //Should we count steps from home, if ant is looking for home??
         
@@ -221,6 +234,8 @@ export class Ant {
             location.reduceFood();
             this.state.startedInStateOnTick = tick;
             action = AntAction.FOUND_FOOD;
+            this.pheremone = {pickedUpPheremoneOnTick: tick, type: PheremoneType.SUGAR} 
+
         }
 
         return action;

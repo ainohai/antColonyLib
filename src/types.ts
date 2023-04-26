@@ -10,8 +10,11 @@ export type ConfigType = {
     moveForwardPercentage: number;
     antFoodPheremoneDecay: number
     antHomePheremoneDecay: number;
-    antPheremoneWeight: number;
-    goodScoreTreshold: number;
+    antFoodPheremoneWeight: number;
+    antHomePheremoneWeight: number;
+    goodFoodScoreTreshold: number;
+    goodHomeScoreTreshold: number;
+    maxPheremone: number;
 };
 export type ParametersType = {
     COLUMNS: number;
@@ -27,9 +30,9 @@ export enum CellStates {
 };
 
 export enum ChoiceType {
-    ANARCHY, 
-    SNIFF, 
     RANDOM,
+    SNIFF, 
+    ANARCHY, 
     UNKNOWN
 }
 

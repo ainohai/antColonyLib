@@ -9,7 +9,7 @@ export class Simulation {
     tick: number;
     state: SimulationState
 
-    constructor(params: Partial<ParametersType>, variableParams: Partial<ConfigType>) {
+    constructor(params: Partial<ParametersType>) {
         this.tick = 0;
 
         const config = setStaticParameters(params)
@@ -22,8 +22,6 @@ export class Simulation {
                 foodsInNest: 0
             }
         };
-
-        setVariableParameters(variableParams);
 
         const home = this.state.world.getHomeCoord();
         this.state.world.setFood(Math.floor(config.COLUMNS/2) + 135, Math.floor(config.ROWS/2) + 135, numOfFood);

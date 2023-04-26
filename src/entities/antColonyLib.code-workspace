@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../antColonizer"
+		},
+		{
+			"path": "../../../antNode"
+		},
+		{
+			"path": "../../../reinforcementPy"
+		}
+	],
+	"settings": {}
+}
