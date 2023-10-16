@@ -22,6 +22,7 @@ export const getValueWithCoordinate = <A>(oneDimensionalArr: A[], totalColumns: 
 }
 
 export const getIndexWithCoordinate = (totalColumns: number, totalRows: number, x: number, y: number): number => {
+    //console.log(`${totalColumns}, ${totalRows}, (${x}, ${y})`)
     let index = totalColumns > y && totalRows > x ? Math.floor(totalColumns * y) + x : undefined;
     if (index === undefined) {
         throw Error(`Trying to access illegal index at (${x},${y})`)

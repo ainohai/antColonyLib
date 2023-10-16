@@ -4,7 +4,7 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackTagsPlugin = require('html-webpack-tags-plugin');
 
 module.exports = {
-  entry: './src/index.ts',
+  entry: './simTestRun/index.ts',
   mode: "development",
   devtool: 'inline-source-map',
   devServer: {
@@ -13,7 +13,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
+        test: /\.(tsx|ts|jsx|js|mjs)$/,
         use: 'ts-loader',
         exclude: /node_modules/,
       },
@@ -21,10 +21,16 @@ module.exports = {
         test: /\.css$/i,
         use: ['style-loader', 'css-loader'],
       },
+        {
+          test: /\.m?js$/,
+          resolve: {
+            fullySpecified: false, // disable the behaviour
+          },
+        },
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js', 'mjs'],
+    extensions: ['.tsx', '.ts', '.js'],
   },
   plugins: [
     new CopyWebpackPlugin({
@@ -33,7 +39,7 @@ module.exports = {
       ]}),
     new HtmlWebpackPlugin({
         cache: false,
-      template: 'src/index.html'
+      template: 'simTestRun/index.html'
     }),
     new HtmlWebpackTagsPlugin({
         tags: [

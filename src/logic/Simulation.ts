@@ -1,9 +1,10 @@
-import { Ant } from '../entities/Ant';
-import { AntWorld } from '../entities/World';
-import { setStaticParameters, setVariableParameters } from "../config/antConfig";
-import { AntAction, ConfigType, ParametersType, SimulationState } from '../types';
+import { Ant } from "../agentImplementations/ant/Ant";
+import { setStaticParameters } from "../config/walkerConfig";
+import { Walker } from "../entities/Walker";
+import { SimulationWorld } from "../entities/World";
+import { ParametersType, SimulationState, AgentType, WalkerAction } from '../types';
 
-const numOfFood = 100;
+const numOfFood = 1000;
 
 export class Simulation {
     tick: number;
@@ -14,8 +15,7 @@ export class Simulation {
 
         const config = setStaticParameters(params)
         this.state = {
-            ants: [],
-            world: new AntWorld(config.COLUMNS, config.ROWS),
+            world: new SimulationWorld(config.COLUMNS, config.ROWS),
             statistics: {
                 totalFoods: 0,
                 foodsPicked: 0,
@@ -23,14 +23,14 @@ export class Simulation {
             }
         };
 
-        const home = this.state.world.getHomeCoord();
+        const home = this.state.world.getHomeIndexes();
         this.state.world.setFood(Math.floor(config.COLUMNS/2) + 135, Math.floor(config.ROWS/2) + 135, numOfFood);
         this.state.world.setFood(Math.floor(config.COLUMNS/2) - 220, Math.floor(config.ROWS/2) + 35, numOfFood);
         this.state.world.setFood(Math.floor(config.COLUMNS/2) - 5, Math.floor(config.ROWS/2) + 80, numOfFood/2);
-        this.state.statistics.totalFoods = numOfFood + numOfFood + numOfFood/2;
 
-        for (let i = 0; i < config.NUM_OF_ANTS; i++) {
-            this.state.ants.push(new Ant(home[0], home[1], `ant-${i}`));
+        for (let i = 0; i < config.NUM_OF_WALKERS; i++) {
+            const ant = new Ant(home[0], home[1], `ant-${i}`);
+            this.state.world.setAgent(home[0], home[1], ant, AgentType.WALKER);
         }
     }
 
@@ -38,18 +38,22 @@ export class Simulation {
         
         this.tick++;
 
-        for (var i = 0; i < this.state.ants.length; i++) {
+        const walkers = this.state.world.getType(AgentType.WALKER) as Walker[];
 
-            const ant = this.state.ants[i];
-            const takenAction = ant.simulateAnt(this.state.world, this.tick);
+        for (var i = 0; i < walkers.length; i++) {
+
+            const walker = walkers[i];
+            const takenAction = walker.simulate(this.state.world, this.tick);
             
-            if (takenAction === AntAction.FOUND_FOOD) {
+            if (takenAction === WalkerAction.FOUND_FOOD) {
                 this.state.statistics.foodsPicked += 1;    
             }
-            else if (takenAction === AntAction.NESTED_FOOD) {
+            else if (takenAction === WalkerAction.NESTED_FOOD) {
                 this.state.statistics.foodsInNest += 1;    
             }
         }
+
+        this.state.world.endTurn();
 
         return this.state;
     }

@@ -1,32 +1,26 @@
-import { Ant } from "./entities/Ant";
-import { AntWorld } from "./entities/World";
+import { Walker } from "./entities/Walker";
+import { SimulationWorld } from "./entities/World";
+
+export type PheremoneRules = {
+    walkerDecay: number, 
+    cellDecay: number, 
+    weight: number, 
+    maxPheremone: number,
+    goodScoreThreshold: number
+}
 
 export type ConfigType = {
-    antLifespan: number;
+    walkerLifespan: number;
     sight: number;
-    foodPheremoneDecay: number;
-    homePheremoneDecay: number;
-    antAnarchyRandomPercentage: number;
+    walkerAnarchyRandomPercentage: number;
     moveForwardPercentage: number;
-    antFoodPheremoneDecay: number
-    antHomePheremoneDecay: number;
-    antFoodPheremoneWeight: number;
-    antHomePheremoneWeight: number;
-    goodFoodScoreTreshold: number;
-    goodHomeScoreTreshold: number;
-    maxPheremone: number;
+    pheremoneRules: {[key in PheremoneType]:  PheremoneRules}
 };
 export type ParametersType = {
     COLUMNS: number;
     ROWS: number;
     RESPAWN_PERCENTAGE: number;
-    NUM_OF_ANTS: number;
-};
-
-export enum CellStates {
-    EMPTY,
-    FOOD,
-    HOME
+    NUM_OF_WALKERS: number;
 };
 
 export enum ChoiceType {
@@ -43,15 +37,14 @@ export type Coordinate = [
 
 export type DirectionScore = {direction: number, score: number, choiceType?: ChoiceType }
 
-export enum AntAction {
+export enum WalkerAction {
     FOUND_FOOD,
     NESTED_FOOD,
     NO_ACTION
 }
 
 export type SimulationState = {
-    ants: Ant[],
-    world: AntWorld,
+    world: SimulationWorld,
     statistics: SimulationStatistics
 };
 
@@ -91,18 +84,28 @@ export enum PheremoneType {
 export type Pheremone = {
     type: PheremoneType,
     pheremoneCellDecay: () => number,
-    pheremoneAntDecay: () => number,
+    pheremoneWalkerDecay: () => number, //Maybe move to agent, if more fine grained control is needed.
     goodScoreThreshold: () => number
 }
 
-export type AntState = {
-    mode: AntDecisionModeType,
+export type WalkerState = {
     startedInStateOnTick: number,
     lockedInStateUntilTick: number | undefined,
-    hasFood: boolean,
     lastChoice: ChoiceType,
 }
-export type AntPheremone = {
+
+export interface AntState extends WalkerState {
+    mode: AntDecisionModeType,
+    hasFood: boolean,
+}
+
+export type WalkerPheremone = {
     type: PheremoneType,
     pickedUpPheremoneOnTick: number
+}
+
+export enum AgentType {
+    HOME, 
+    FOOD, 
+    WALKER
 }

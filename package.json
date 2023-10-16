@@ -1,5 +1,5 @@
 {
-  "name": "@ainohai/antcolony",
+  "name": "@ainohai/walkers",
   "version": "0.1",
   "source": "src/index.html",
   "types": "./lib/cjs/types/index.d.ts",
@@ -9,7 +9,8 @@
       "build": "npm run clean && npm run build:esm && npm run build:cjs",
       "build:esm": "tsc -p ./configs/tsconfig.esm.json && mv lib/esm/index.js lib/esm/index.mjs",
       "build:cjs": "tsc -p ./configs/tsconfig.cjs.json",
-      "prepack": "npm run build"
+      "prepack": "npm run build",
+      "dev": "webpack serve --open"
   },
   "exports": {
     ".": {

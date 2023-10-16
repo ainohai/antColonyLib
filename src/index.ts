@@ -1,18 +1,24 @@
-import { antConfig, setVariableParameters, staticParameters } from "./config/antConfig";
-import { Ant } from "./entities/Ant";
-import { AntWorld } from "./entities/World";
+import { Ant } from "./agentImplementations/ant/Ant";
+import { walkerConfig, setVariableParameters, staticParameters } from "./config/walkerConfig";
+import { Walker } from "./entities/Walker";
+import { SimulationWorld } from "./entities/World";
 import { Simulation } from "./logic/Simulation";
-import { AntDecisionModeType, AntState, ChoiceType, ConfigType, ParametersType } from "./types";
+import { AntDecisionModeType, WalkerState, ChoiceType, ConfigType, ParametersType, PheremoneRules, PheremoneType, AgentType, AntState } from "./types";
 
 
+export type { Walker };
 export type { Ant };
-export type { AntWorld };
+export type { SimulationWorld };
 export type { Simulation };
-export { AntState };
+export type { PheremoneRules };
+export type { WalkerState };
 export type { ParametersType };
 export type { ConfigType };
 export { ChoiceType };
 export {AntDecisionModeType};
+export type { AntState };
+export {PheremoneType};
+export {AgentType};
 
 export function getStaticParams(): Readonly<ParametersType> {
     return {...staticParameters()};
@@ -23,11 +29,11 @@ export function getStaticParams(): Readonly<ParametersType> {
  * Should be possible to add support for changing the config during simulation by adding a new api method. */
 export function getConfig(): Readonly<ConfigType> {
     console.log("Get config");
-    return {...antConfig()};
+    return {...walkerConfig()};
 }
 
-export function setVariableParams(antConfig: ConfigType) {
-    setVariableParameters(antConfig);
+export function setVariableParams(walkerConfig: ConfigType) {
+    setVariableParameters(walkerConfig);
 }
 
 export function createSimulation(params: Partial<ParametersType>): Simulation{

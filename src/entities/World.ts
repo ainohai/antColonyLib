@@ -1,28 +1,23 @@
 import { getCoordinateWithIndex, getIndexWithCoordinate, getValueWithCoordinate, wrapCoordinateToWorld } from '../utils/coordinateUtil';
-import { antConfig, staticParameters } from "../config/antConfig";
-import { CellStates, Coordinate, Direction, Pheremone, PheremoneType, SimulationStatistics } from '../types';
+import { walkerConfig, staticParameters } from "../config/walkerConfig";
+import { AgentType,  Coordinate, Direction, Pheremone, PheremoneRules, PheremoneType, SimulationStatistics } from '../types';
+import { Agent } from "./Agent";
+import { Home, Food } from './Agent';
 
-const MAX_CELL_PHEREMONE = 1;
+const MIN_CELL_PHEREMONE = 0.001;
+
 
 export class Cell {
-    type: CellStates = CellStates.EMPTY;
-    //foodPheremone: number = 0;
-    //homePheremone: number = 0;
-    foodCount: number = 0;
-    //simulation cycle when pheromones were last calculated. 
-    touched: number = 0;
-    homePheremone: number = 0;
-    foodPheremone: number = 0;
 
+    private capacity: number = 1000 // How much stuff can be fit in the cell. Zero = wall. 
+    private touched: number = 0; // When have pheremone levels last updated.
+    private _pheremones: {[key in PheremoneType]?:  number} = {}
+    
     constructor() {
     }
 
-    reduceFood() {
-        this.foodCount -= 1;
-
-        if (this.foodCount === 0) {
-            this.type = CellStates.EMPTY;
-        }
+    get pheremones(): {[key in PheremoneType]?:  number} {
+        return this._pheremones;
     }
 
     touchPheromones(currentTick: number) {
@@ -33,55 +28,66 @@ export class Cell {
         //Doesn't worry about concurrency. 
         const evaporationTime = currentTick - this.touched;
 
-        const food = this.foodPheremone * (1 - antConfig().foodPheremoneDecay * evaporationTime);
-        const home = this.homePheremone * (1 -  antConfig().homePheremoneDecay * evaporationTime);
+        for (let [pheremone, value] of Object.entries(this.pheremones)) {
+            const phe: PheremoneType = Number.parseInt(pheremone) as PheremoneType;
+            if (!value) {
+                continue;
+            }
+            else if (value < 0) {
 
-        this.foodPheremone = food > 0 ? food : 0;
-        this.homePheremone = home > 0 ? home : 0
+                this.pheremones[phe] = 0;
+            }
+            else {
+
+                const pher = value * (1 - walkerConfig().pheremoneRules[phe].walkerDecay * evaporationTime);
+                this.pheremones[phe] = pher >= MIN_CELL_PHEREMONE  ? pher : 0;
+            }
+        }
 
         this.touched = currentTick;
 
     }
     boundPheremone(min: number, max: number, current: number, addition: number) {
         const pheremone = current + addition;
-        if (pheremone > max) {
+        /*if (pheremone > max) {
             return max;
         }
         else if (pheremone < min) {
             return min;
-        }
+        }*/
         return pheremone;
     }
 
     addPheremone(pheremoneType: PheremoneType, startingStep: number, currentTick: number) {
         this.touchPheromones(currentTick);
 
-        if (pheremoneType === PheremoneType.SUGAR){ 
-            let foodPheremoneAdd = antConfig().antFoodPheremoneWeight * (1 - (antConfig().antFoodPheremoneDecay * (currentTick - startingStep)));
-            foodPheremoneAdd = foodPheremoneAdd > 0 ? foodPheremoneAdd : 0;
+        for (let [pheremone, value] of Object.entries(this.pheremones)) {
+            const pheType: PheremoneType = Number.parseInt(pheremone) as PheremoneType;
+            const pheremoneRules: PheremoneRules = walkerConfig().pheremoneRules[pheType];
+            let pheremoneAdd = pheremoneRules.weight * (1 - (pheremoneRules.walkerDecay * (currentTick - startingStep)));
+            pheremoneAdd = pheremoneAdd > 0 ? pheremoneAdd : 0;
             
-            this.foodPheremone = this.boundPheremone(0, antConfig().maxPheremone, this.foodPheremone, foodPheremoneAdd);
+            this.pheremones[PheremoneType.SUGAR] = this.boundPheremone(0, pheremoneRules.maxPheremone, this.pheremones[PheremoneType.SUGAR] ?? 0, pheremoneAdd);
         }
-        if (pheremoneType === PheremoneType.HOME){
-            let homePheremoneAdd = antConfig().antHomePheremoneWeight * (1 - (antConfig().antHomePheremoneDecay * (currentTick-startingStep)))
-            homePheremoneAdd = homePheremoneAdd > 0 ? homePheremoneAdd : 0;
-            this.homePheremone = this.boundPheremone(0, antConfig().maxPheremone, this.homePheremone, homePheremoneAdd);
-        }
-
-
     }
 }
 
-export class AntWorld {
+export class SimulationWorld {
 
-    cells: Cell[] = [];
-    home: number = 0;
-    private foods: number[] = [];
+    private cells: Cell[] = [];
+    private agentsInCells: {[key in AgentType]: {[cellIndex: number]: Agent[]}};
+    private postHandleAgents = [AgentType.FOOD];
 
     constructor(columns: number, rows :number) {
         this.cells = [];
 
         this.createCells(columns, rows);
+
+        let a: {[key in AgentType]?: {[cellIndex: number]: Agent[]}} = {};
+        Object.keys(AgentType).forEach(enumVal => {const aType = Number.parseInt(enumVal) as AgentType; a[aType] = {}});
+
+        this.agentsInCells = a as {[key in AgentType]: {[cellIndex: number]: Agent[]}}; 
+
         this.setHome(Math.floor(columns/2), Math.floor(rows/2));
     }
 
@@ -90,35 +96,86 @@ export class AntWorld {
         return getValueWithCoordinate(this.cells, staticParameters().COLUMNS, coordinate[0], coordinate[1]);
     }
 
-    getHome() {
-        return this.cells[this.home];
+    getIndex(x: number, y: number): (number | undefined) {  
+        
+        let [xFixed, yFixed] = wrapCoordinateToWorld(staticParameters().COLUMNS, staticParameters().ROWS, [x, y])
+        const locationIndex = getIndexWithCoordinate(staticParameters().COLUMNS, staticParameters().ROWS, xFixed, yFixed);
+
+        return locationIndex;
     }
 
+    getHome() {
+        return this.agentsInCells[AgentType.HOME];
+    }
 
-    getFoodCoordinates(): [number, number][] {
-        const foods :[number, number][] = [];
+    getType(agentType: AgentType): Agent[] {
 
-        this.foods = this.foods.filter(index => {
-            const coordinate = getCoordinateWithIndex(staticParameters().COLUMNS, index);
-            const cell = this.getCell(coordinate[0], coordinate[1]);
-            return cell?.type === CellStates.FOOD || false;
-        });
+        const agents = this.agentsInCells[agentType as AgentType];
+        if (!agents) {
+            return [];
+        }
+        return Object.values(agents).flatMap(t => t) ;
+    }
 
-        for (let food of this.foods) {
-            foods.push(getCoordinateWithIndex(staticParameters().COLUMNS, food));
+    getTypeFromCell(agentType: AgentType, location: [number, number]) {
+        const locationIndex = this.getIndex(location[0], location[1]);
+        if (!locationIndex) {
+            return [];
         }
 
-        if (this.foods.length < 12) {
+        const agentsByType = this.agentsInCells[agentType] ?? {}
+        const agents: Agent[] = agentsByType[locationIndex] ?? [];
+        
+        return agents;
+    }
+
+    //ensure removal
+    getFoodIndexes(): Coordinate[] {
+        
+        const foodsWithIndexes = this.agentsInCells[AgentType.FOOD]
+
+        return Object.keys(foodsWithIndexes).map(t => getCoordinateWithIndex(staticParameters().COLUMNS, Number.parseInt(t)))
+
+    }
+
+    getHomeIndexes(): Coordinate {
+        const firstHome = Object.keys(this.getHome()).map(Number)[0];
+
+        return getCoordinateWithIndex(staticParameters().COLUMNS, firstHome);
+    }
+
+    endTurn() {
+
+        let count = 0; 
+
+        for (const agentType of this.postHandleAgents) {
+
+            const agentWithIndexes = this.agentsInCells[agentType];
+            if (!agentWithIndexes) {
+                continue;
+            }
+
+
+
+            for (const [index, agents] of Object.entries(this.agentsInCells[agentType as AgentType])) {
+                
+                this.agentsInCells[agentType][index] = agents.filter(t => !t.deleteMe());
+                
+                count += agents.length; 
+                
+                if (this.agentsInCells[agentType][index].length === 0) {
+                    delete this.agentsInCells[agentType][index];
+                }
+            }
+        }
+
+        if (count < 12) {
             this.setFood(Math.floor(Math.random() * staticParameters().COLUMNS), Math.floor(Math.random() * 
             staticParameters().ROWS), Math.floor(Math.random() *1000));
         }
 
-        return foods;
     }
 
-    getHomeCoord() {
-        return getCoordinateWithIndex(staticParameters().COLUMNS, this.home);
-    }
 
     private createCells(columns: number, rows: number) {
         const totalNumOfCells = columns * rows;
@@ -148,9 +205,9 @@ export class AntWorld {
             throw new Error(`Trying to set home to illegal point (${x},${y})`)
         }
 
-        cell.type = CellStates.HOME;
         let homeIndex = getIndexWithCoordinate(staticParameters().COLUMNS, staticParameters().ROWS, x, y);
-        this.home = homeIndex;
+        const home = new Home([x, y]);
+        this.agentsInCells[AgentType.HOME][homeIndex] = [home];
 
     }
 
@@ -162,8 +219,24 @@ export class AntWorld {
             throw new Error(`Trying to set food to illegal point (${x},${y})`)
         }
 
-        cell.type = CellStates.FOOD;
-        cell.foodCount = amount; 
-        this.foods.push(index);
+        const food = new Food([x, y], amount);
+        this.agentsInCells[AgentType.FOOD][index] = [food];
     }
+
+    public setAgent(x: number, y: number, agent: Agent, agentType: AgentType) {
+        const index = getIndexWithCoordinate(staticParameters().COLUMNS, staticParameters().ROWS, x, y);
+        const cell = getValueWithCoordinate(this.cells, staticParameters().COLUMNS, x, y);
+
+        if (!cell || !index) {
+            throw new Error(`Trying to set food to illegal point (${x},${y})`)
+        }
+
+        if (!this.agentsInCells[agentType][index]) {
+            this.agentsInCells[agentType][index] = [agent];
+        }
+        else {
+            this.agentsInCells[agentType][index].push(agent);
+        }
+    }
+
 }

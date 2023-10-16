@@ -1,7 +1,7 @@
-import { Ant } from "../entities/Ant";
-import { AntWorld, Cell } from "../entities/World";
-import { DirectionScore } from "../types";
-export declare const scoreDirections: (ant: Ant, world: AntWorld, tick: number, scoreFunction: (ant: Ant, cell: Cell, tick: number) => number) => DirectionScore[];
-export declare const getScoreForDirection: (angle: number, ant: Ant, world: AntWorld, currentTick: number, scoreFunction: (ant: Ant, cell: Cell, tick: number) => number) => DirectionScore;
-export declare const getRandomDirectionScored: (ant: Ant, world: AntWorld, currentTick: number, scoreFunction: (ant: Ant, cell: Cell, tick: number) => number) => DirectionScore;
+import { Walker } from "../entities/Walker";
+import { SimulationWorld } from "../entities/World";
+import { Coordinate, DirectionScore } from "../types";
+export declare const scoreDirections: (walker: Walker, world: SimulationWorld, tick: number, scoreFunction: (walker: Walker, coordinate: Coordinate, tick: number, world: SimulationWorld) => number) => DirectionScore[];
+export declare const getScoreForDirection: (angle: number, walker: Walker, world: SimulationWorld, currentTick: number, scoreFunction: (walker: Walker, coordinate: Coordinate, tick: number, world: SimulationWorld) => number) => DirectionScore;
+export declare const getRandomDirectionScored: (walker: Walker, world: SimulationWorld, currentTick: number, scoreFunction: (walker: Walker, coordinate: Coordinate, tick: number, world: SimulationWorld) => number) => DirectionScore;
 //# sourceMappingURL=scoring.d.ts.map

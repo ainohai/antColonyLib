@@ -1,13 +1,14 @@
-import { antConfig } from "../config/antConfig";
-import { Ant } from "../entities/Ant";
-import { AntWorld, Cell } from "../entities/World";
-import { DirectionScore } from "../types";
+import { staticParameters, walkerConfig } from "../config/walkerConfig";
+import { Walker } from "../entities/Walker";
+import { SimulationWorld, Cell } from "../entities/World";
+import { Coordinate, DirectionScore } from "../types";
+import { wrapCoordinateToWorld } from "../utils/coordinateUtil";
 import { directions, toLeft, toRight } from "./directions";
 
-export const scoreDirections = (ant: Ant, world: AntWorld, tick: number, scoreFunction: (ant: Ant, cell: Cell, tick: number) => number): DirectionScore[] => {
+export const scoreDirections = (walker: Walker, world: SimulationWorld, tick: number, scoreFunction: (walker: Walker, coordinate: Coordinate, tick: number, world: SimulationWorld) => number): DirectionScore[] => {
 
-    const nextAngles = [ant.currentAngle, toLeft(ant.currentAngle, 1), 
-        toRight(ant.currentAngle, 1)];
+    const nextAngles = [walker.currentAngle, toLeft(walker.currentAngle, 1), 
+        toRight(walker.currentAngle, 1)];
 
    const scores: DirectionScore[] = []
 
@@ -16,53 +17,70 @@ export const scoreDirections = (ant: Ant, world: AntWorld, tick: number, scoreFu
    }
 
     nextAngles.forEach((angle, index) => { 
-        let score: DirectionScore = getScoreForDirection(angle, ant, world, tick, scoreFunction)
+        let score: DirectionScore = getScoreForDirection(angle, walker, world, tick, scoreFunction)
         scores.push(score);
     });
 
     return scores;
 }
 
-export const getScoreForDirection = (angle: number, ant: Ant, world: AntWorld, currentTick:number, scoreFunction: (ant: Ant, cell: Cell, tick: number) => number): DirectionScore => {
+export const getScoreForDirection = (angle: number, walker: Walker, world: SimulationWorld, currentTick:number, scoreFunction: (walker: Walker, coordinate: Coordinate, tick: number, world: SimulationWorld) => number): DirectionScore => {
 
-    let range = antConfig().sight;
+    let range = walkerConfig().sight;
     let score = 0;
 
-    const currentLocation = ant.location;
+    const currentLocation = walker.location;
 
     const origX = currentLocation[0];
     const origY = currentLocation[1];
 
-    const direction = directions[angle];
+    const startPointX = origX - range;
+    const startPointY = origY - range;
 
-    for (let i = 1; i <= range; i++) {
+    let bestCell = [origX + directions[angle].x, origY + directions[angle].y]
+    let maxValue = 0;
 
-        let newLocationX = origX + i * direction.x;
-        let newLocationY = origY + i * direction.y;
+    for (let x = startPointX; x <= origX + range; x++) {
+        for (let y = startPointY; y <= origY + range; y++) {
 
-            let c = world.getCell(newLocationX, newLocationY);
+            if (x !== origX && y !== origY) {
+            
+            let newLocation = wrapCoordinateToWorld(staticParameters().COLUMNS, staticParameters().ROWS, [x, y]);
+            
+            let c = world.getCell(newLocation[0], newLocation[1]);
             
             if (!!c) {
 
                 c.touchPheromones(currentTick);
-                const cellScore = scoreFunction(ant, c, currentTick);
+                const cellScore = scoreFunction(walker, newLocation, currentTick, world);
 
-                let distanceOptimizedScore = cellScore * 
-                    (antConfig().sight / (Math.sqrt(Math.pow(i, 2) + Math.pow(i, 2)) * (range + 1)));
-                score = Math.max(score, cellScore);
+                if (cellScore > maxValue) {
+                    maxValue = cellScore;
+                    bestCell = newLocation;
+                }
+            
+            }
+        }
+        }
+    }
+    
 
-    }
-    }
-    return { direction: angle, score: score};
+    let angleBtwXAxis = Math.atan((bestCell[1] - origY) / (bestCell[0] - origX));
+    const INDEX_OF_WEST = 6;
+
+    let closestDirection = Math.floor((angleBtwXAxis- (2*Math.PI / 16)) % 8 )
+    let wrappedToDirections =  (closestDirection + INDEX_OF_WEST) % (directions.length -1)
+
+    return { direction: wrappedToDirections, score: maxValue};
 }
 
-export const getRandomDirectionScored = (ant: Ant, world: AntWorld, currentTick:number, scoreFunction: (ant: Ant, cell: Cell, tick: number) => number): DirectionScore => {
+export const getRandomDirectionScored = (walker: Walker, world: SimulationWorld, currentTick:number, scoreFunction: (walker: Walker, coordinate: Coordinate, tick: number, world: SimulationWorld) => number): DirectionScore => {
 
-    const angles = [ant.currentAngle, toLeft(ant.currentAngle, 1), 
-        toRight(ant.currentAngle, 1)];
+    const angles = [walker.currentAngle, toLeft(walker.currentAngle, 1), 
+        toRight(walker.currentAngle, 1)];
 
     const randomAngle = angles[Math.floor(Math.random() * angles.length)];
-    return getScoreForDirection(randomAngle, ant, world, currentTick, scoreFunction)
+    return getScoreForDirection(randomAngle, walker, world, currentTick, scoreFunction)
 };
 
 

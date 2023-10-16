@@ -1,4 +1,4 @@
-# Ant colony
+# walker colony
 
 Tool for generative art projects. 
 

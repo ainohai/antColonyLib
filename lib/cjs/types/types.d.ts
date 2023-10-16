@@ -1,31 +1,26 @@
-import { Ant } from "./entities/Ant";
-import { AntWorld } from "./entities/World";
-export declare type ConfigType = {
-    antLifespan: number;
-    sight: number;
-    foodPheremoneDecay: number;
-    homePheremoneDecay: number;
-    antAnarchyRandomPercentage: number;
-    moveForwardPercentage: number;
-    antFoodPheremoneDecay: number;
-    antHomePheremoneDecay: number;
-    antFoodPheremoneWeight: number;
-    antHomePheremoneWeight: number;
-    goodFoodScoreTreshold: number;
-    goodHomeScoreTreshold: number;
+import { SimulationWorld } from "./entities/World";
+export declare type PheremoneRules = {
+    walkerDecay: number;
+    cellDecay: number;
+    weight: number;
     maxPheremone: number;
+    goodScoreThreshold: number;
+};
+export declare type ConfigType = {
+    walkerLifespan: number;
+    sight: number;
+    walkerAnarchyRandomPercentage: number;
+    moveForwardPercentage: number;
+    pheremoneRules: {
+        [key in PheremoneType]: PheremoneRules;
+    };
 };
 export declare type ParametersType = {
     COLUMNS: number;
     ROWS: number;
     RESPAWN_PERCENTAGE: number;
-    NUM_OF_ANTS: number;
+    NUM_OF_WALKERS: number;
 };
-export declare enum CellStates {
-    EMPTY = 0,
-    FOOD = 1,
-    HOME = 2
-}
 export declare enum ChoiceType {
     RANDOM = 0,
     SNIFF = 1,
@@ -41,15 +36,13 @@ export declare type DirectionScore = {
     score: number;
     choiceType?: ChoiceType;
 };
-export declare enum AntAction {
+export declare enum walkerAction {
     FOUND_FOOD = 0,
     NESTED_FOOD = 1,
     NO_ACTION = 2
 }
 export declare type SimulationState = {
-    ants: Ant[];
-    world: AntWorld;
-    statistics: SimulationStatistics;
+    world: SimulationWorld;
 };
 export declare type SimulationStatistics = {
     totalFoods: number;
@@ -73,18 +66,25 @@ export declare enum PheremoneType {
 export declare type Pheremone = {
     type: PheremoneType;
     pheremoneCellDecay: () => number;
-    pheremoneAntDecay: () => number;
+    pheremoneWalkerDecay: () => number;
     goodScoreThreshold: () => number;
 };
-export declare type AntState = {
-    mode: AntDecisionModeType;
+export declare type WalkerState = {
     startedInStateOnTick: number;
     lockedInStateUntilTick: number | undefined;
-    hasFood: boolean;
     lastChoice: ChoiceType;
 };
-export declare type AntPheremone = {
+export interface AntState extends WalkerState {
+    mode: AntDecisionModeType;
+    hasFood: boolean;
+}
+export declare type WalkerPheremone = {
     type: PheremoneType;
     pickedUpPheremoneOnTick: number;
 };
+export declare enum AgentType {
+    HOME = 0,
+    FOOD = 1,
+    WALKER = 2
+}
 //# sourceMappingURL=types.d.ts.map
