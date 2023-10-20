@@ -4,7 +4,7 @@ import { Walker } from "../entities/Walker";
 import { SimulationWorld } from "../entities/World";
 import { ParametersType, SimulationState, AgentType, WalkerAction } from '../types';
 
-const numOfFood = 1000;
+const numOfFood = 50;
 
 export class Simulation {
     tick: number;

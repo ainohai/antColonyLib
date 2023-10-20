@@ -97,6 +97,7 @@ export type WalkerState = {
 export interface AntState extends WalkerState {
     mode: AntDecisionModeType,
     hasFood: boolean,
+    history: number[][];
 }
 
 export type WalkerPheremone = {
